@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+const mongoose = require("mongoose");
 const _ = require("lodash");
 
 const homeStartingContent = "Apple wants a weekend or expensive dui want to decorate. Which is always the creator nor the duration of her life. Carrots carrots just been running a lot. Product lived in this. Financing yeast rice vegetarian or clinical portal. That they are not members, nor members of the Donec ultrices tincidunt arcu. A lot of television targeted at the undergraduate nutrition. Of life, and the mountains shall be born, ultricies quis, congue in magnis dis parturient. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. The founder of basketball and football propaganda graduated drink at the arc. Performance skirt smile at any hate for hate vulputate. Running a lot of television targeted at the undergraduate nutrition.";
@@ -9,14 +10,22 @@ const contactContent = "Thermal deductible until the price vulputate sapien. Rho
 
 const app = express();
 app.set("view engine", "ejs");
+mongoose.connect("mongodb+srv://NikhilSoni:Nikhil@123@cluster0.klq2f.mongodb.net/blogDB", {useNewUrlParser: true});
 
-const posts = [];
+const postSchema = {
+    title: String,
+    content: String
+}
+
+const Post = mongoose.model("Post", postSchema);
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
 app.get("/", function(req, res) {
-    res.render("home", {homeContent: homeStartingContent, posts: posts});
+    Post.find({}, function(err, posts) {
+        res.render("home", {homeContent: homeStartingContent, posts: posts});
+    })
 });
 
 app.get("/about", function(req, res) {
@@ -32,26 +41,22 @@ app.get("/compose", function(req, res) {
 });
 
 app.post("/compose", function(req, res) {
-    const post = {
+    const post = new Post({
         title: req.body.title,
         content: req.body.post
-    };
-    posts.push(post);
-    res.redirect("/");
+    });
+    post.save(err => {
+        if (!err)
+        res.redirect("/");
+    });
 });
 
-app.get("/posts/:postName", function(req, res) {
+app.get("/posts/:postId", function(req, res) {
+    const requestedPostId = req.params.postId;
+    Post.findOne({_id: requestedPostId}, function(err, post) {
+        res.render("post", {title: post.title, content: post.content})
+    })
     const requestedTitle = _.lowerCase(req.params.postName);
-    posts.forEach(function(post) {
-        const storedTitle = _.lowerCase(post.title);
-
-        if(storedTitle === requestedTitle) {
-            // console.log("Match Found!");
-            res.render("post", {title: post.title, content: post.content})
-        } else {
-            console.log("Not a Match!");
-        }
-    });
 });
 
 app.listen(3000, function() {
