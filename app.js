@@ -59,6 +59,11 @@ app.get("/posts/:postId", function(req, res) {
     const requestedTitle = _.lowerCase(req.params.postName);
 });
 
-app.listen(3000, function() {
-    console.log("Server started on port 3000");
+
+let port = process.env.PORT;
+if (port == null || port == "")
+    port = 3000;
+
+app.listen(port, function() {
+    console.log("Connected to the Server");
 });
